@@ -20,3 +20,22 @@ If each 3x3 square is handled separately, perhaps by its own go routine, then ea
 Each 3x3 square:
 - construct an array 0 to 8 (9 integers) that represent its non-zero content; for example, a 5 would go in the 4th slot
 - For each blank, for each missing number (not in the array above), test the number for presence in the row and column of the blank. If not there insert into the slot in the pencil marks.
+
+For example, based on the test puzzle below, in the first square (upper left), the pencil marks should be:
+(0,1) --> 2
+(1,0) --> 4
+(1,2) --> 4,6
+(2,1) --> 2,8
+
+```
+1 _ 3 _ _ 6 _ 8 _
+_ 5 _ _ 8 _ 1 2 _
+7 _ 9 1 _ 3 _ 5 6
+_ 3 _ _ 6 7 _ 9 _
+5 _ 7 8 _ _ _ 3 _
+8 _ 1 _ 3 _ 5 _ 7
+_ 4 _ _ 7 8 _ 1 _
+6 _ 8 _ _ 2 _ 4 _
+_ 1 2 _ 4 5 _ 7 8
+
+```
