@@ -14,12 +14,12 @@ func NewRow(rownum int) row {
 func (r row) Print() {
   var j int
   for j=0; j < 9; j++ {
-    fmt.Print(puzzle[rownum][j][0])
+    fmt.Print(puzzle[r.rownum][j][0])
   }
   fmt.Print("\n")
 }
 
-func (r rownum) is_in_row(candidate int) bool {
+func (r row) is_in_row(candidate int) bool {
   var j int
   for j=0; j < 9; j++ {
     if puzzle[r.rownum][j][0] == candidate {

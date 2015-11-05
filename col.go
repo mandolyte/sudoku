@@ -5,7 +5,7 @@ type col struct {
   colnum int
 }
 
-func Newcol(colnum int) col {
+func NewCol(colnum int) col {
   var c col
   c.colnum = colnum
   return c
@@ -19,7 +19,7 @@ func (c col) Print() {
   fmt.Print("\n")
 }
 
-func (c colnum) is_in_col(candidate int) bool {
+func (c col) is_in_col(candidate int) bool {
   var i int
   for i=0; i < 9; i++ {
     if puzzle[i][c.colnum][0] == candidate {
