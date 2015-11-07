@@ -1,13 +1,16 @@
 package sudoku
+import "errors"
 import "fmt"
 
 type square struct {
   corner [3]int
+  p *[9][9][10]int
 }
 
-func NewSquare(corner_coords [3]int) square {
+func NewSquare(corner_coords [3]int, p *[9][9][10]int) square {
   var s square
   s.corner = corner_coords
+  s.p = p
   return s
 }
 
@@ -15,7 +18,7 @@ func (s square) Print() {
   var i,j int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
-      fmt.Print(puzzle[i][j][0])
+      fmt.Print(s.p[i][j][0])
     }
     fmt.Print("\n")
   }
@@ -25,7 +28,7 @@ func (s square) is_in_square(candidate int) bool {
   var i,j int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
-      if puzzle[i][j][0] == candidate {
+      if s.p[i][j][0] == candidate {
         return true
       }
     }
@@ -36,7 +39,7 @@ func (s square) is_in_square(candidate int) bool {
 func (s square) is_in_row(row, candidate int) bool {
   var j int
   for j=0; j < 9; j++ {
-    if puzzle[row][j][0] == candidate {
+    if s.p[row][j][0] == candidate {
       return true
     }
   }
@@ -46,7 +49,7 @@ func (s square) is_in_row(row, candidate int) bool {
 func (s square) is_in_col(col, candidate int) bool {
   var i int
   for i=0; i < 9; i++ {
-    if puzzle[i][col][0] == candidate {
+    if s.p[i][col][0] == candidate {
       return true
     }
   }
@@ -59,7 +62,7 @@ func (s square) PencilMarks() {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
       // if coordinate in puzzle is not zeros continue
       // If zero then it needs pencil marks
-      if puzzle[i][j][0] == 0 {
+      if s.p[i][j][0] == 0 {
         //fmt.Printf("puzzle[%v][%v] needs pencil marks\n",i,j)
         var x int
         for x=1; x < 10; x++ {
@@ -82,7 +85,7 @@ func (s square) PencilMarks() {
           // then we have a pencil mark for this number
           // assign it to the nth position of the 3rd
           // dimension of this location in the square.
-          puzzle[i][j][x] = x
+          s.p[i][j][x] = x
         }
       }
     }
@@ -95,11 +98,11 @@ func (s square) PrintPencilMarks() {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
       // if coordinate in puzzle is not zeros continue
       // If zero then it needs pencil marks
-      if puzzle[i][j][0] == 0 {
+      if s.p[i][j][0] == 0 {
         fmt.Printf("Pencil marks for puzzle[%v][%v] are:",i,j)
         var x int
         for x=1; x < 10; x++ {
-          if puzzle[i][j][x] == 0 {
+          if s.p[i][j][x] == 0 {
             continue
           }
           fmt.Printf("%v,",x)
@@ -118,20 +121,36 @@ func (s square) ScanSetSinglePencilMarks() int {
       // if coordinate in puzzle is not zeros continue
       // If zero then it needs pencil marks
       var y,count int = 0,0
-      if puzzle[i][j][0] == 0 {
+      if s.p[i][j][0] == 0 {
         var x int
         for x=1; x < 10; x++ {
-          if puzzle[i][j][x] != 0 {
+          if s.p[i][j][x] != 0 {
             count++
             y = x
           }
         }
         if count == 1 {
-          puzzle[i][j][0] = y
+          s.p[i][j][0] = y
           total++
         }
       }
     }
   }
   return total
+}
+
+func (s square) validate() error {
+  var tester [10]int
+  var i,j int
+  for i=s.corner[0]; i < s.corner[0]+3; i++ {
+    for j=s.corner[1]; j < s.corner[1]+3; j++ {
+      tester[s.p[i][j][0]] = s.p[i][j][0]
+    }
+  }
+  for i=1; i<10; i++ {
+    if tester[i] == 0 {
+      return errors.New("Not solved")
+    }
+  }
+  return nil
 }
