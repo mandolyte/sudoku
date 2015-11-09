@@ -79,7 +79,6 @@ func (p *puzzle) Solve() (bool, error) {
   if err != nil {
     return false, err
   }
-  p.print()
 
 
   // create the squares
@@ -87,7 +86,7 @@ func (p *puzzle) Solve() (bool, error) {
   for i:=0; i<9; i++ {
     p.ninesqs[i] = NewSquare(squares[i], &p.val)
     //(nine[i]).Print()
-    (p.ninesqs[i]).PencilMarks()
+    (p.ninesqs[i]).pencilMarks()
     //(nine[i]).PrintPencilMarks()
   }
 
@@ -107,7 +106,8 @@ func (p *puzzle) Solve() (bool, error) {
   for {
     var change_count int
     for i:=0; i<9; i++ {
-      c := (p.ninesqs[i]).ScanSetSinglePencilMarks()
+      c := (p.ninesqs[i]).scanSetSinglePencilMarks()
+      (p.ninesqs[i]).pencilMarks()
       change_count += c
     }
     log.Printf("changed squares is %v\n", change_count)
@@ -116,6 +116,16 @@ func (p *puzzle) Solve() (bool, error) {
       break
     }
   }
+
+  p.print()
+  // generate all possible squares
+  for i:=6; i<7; i++ {
+    log.Printf("Permuting square %v\n",i)
+    (p.ninesqs[i]).printPencilMarks()
+    (p.ninesqs[i]).permutations()
+  }
+
+
 
   if err := p.validate(); err != nil {
     return false, nil
