@@ -16,7 +16,7 @@ type puzzle struct {
   val [9][9][10]int
 
   // representation of each square in the puzzle
-  ninesqs [9]square
+  ninesqs [9]*square
 
   // representation of the each row
   ninerows [9]row

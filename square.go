@@ -10,15 +10,15 @@ type square struct {
   level int
 }
 
-func NewSquare(corner_coords [3]int, p *[9][9][10]int) square {
-  var s square
+func NewSquare(corner_coords [3]int, p *[9][9][10]int) *square {
+  s := new(square)
   s.corner = corner_coords
   s.p = p
   s.candidates = make([]([3][3]int),0)
   return s
 }
 
-func (s square) print() {
+func (s *square) print() {
   var i,j int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
@@ -28,7 +28,7 @@ func (s square) print() {
   }
 }
 
-func (s square) is_in_square(candidate int) bool {
+func (s *square) is_in_square(candidate int) bool {
   var i,j int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
@@ -40,7 +40,7 @@ func (s square) is_in_square(candidate int) bool {
   return false
 }
 
-func (s square) is_in_row(row, candidate int) bool {
+func (s *square) is_in_row(row, candidate int) bool {
   var j int
   for j=0; j < 9; j++ {
     if s.p[row][j][0] == candidate {
@@ -50,7 +50,7 @@ func (s square) is_in_row(row, candidate int) bool {
   return false
 }
 
-func (s square) is_in_col(col, candidate int) bool {
+func (s *square) is_in_col(col, candidate int) bool {
   var i int
   for i=0; i < 9; i++ {
     if s.p[i][col][0] == candidate {
@@ -60,7 +60,7 @@ func (s square) is_in_col(col, candidate int) bool {
   return false
 }
 
-func (s square) pencilMarks() {
+func (s *square) pencilMarks() {
   var i,j int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
@@ -100,7 +100,7 @@ func (s square) pencilMarks() {
   }
 }
 
-func (s square) printPencilMarks() {
+func (s *square) printPencilMarks() {
   var i,j int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
@@ -121,7 +121,7 @@ func (s square) printPencilMarks() {
   }
 }
 
-func (s square) scanSetSinglePencilMarks() int {
+func (s *square) scanSetSinglePencilMarks() int {
   var i,j int
   var total int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
@@ -147,7 +147,7 @@ func (s square) scanSetSinglePencilMarks() int {
   return total
 }
 
-func (s square) validate() error {
+func (s *square) validate() error {
   var tester [10]int
   var i,j int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
@@ -179,7 +179,7 @@ func testValidate(psquare [3][3]int) error {
   return nil
 }
 
-func (s square) permutations() {
+func (s *square) permutations() {
   var psquare [3][3]int
   // make a copy of our 3x3; counting the blanks
   var count, i2, j2 int
@@ -214,7 +214,7 @@ func (s square) permutations() {
   }
 }
 
-func (s square) permutate(x,y,z int,psquare [3][3]int) {   
+func (s *square) permutate(x,y,z int,psquare [3][3]int) {   
   s.level++
   log.Printf("Level: %v, Permutate start at [%v][%v][%v]\n",s.level,x,y,z)
   fmt.Printf("psquare is:\n%v\n",psquare)
@@ -227,21 +227,25 @@ func (s square) permutate(x,y,z int,psquare [3][3]int) {
   var xwindup bool = true
   var ywindup bool = true
   for i:=s.corner[0]; i < s.corner[0]+3; i++ {
+    fmt.Printf("[iLoop]i,z=%v,%v\n",i,z)
     if i < x && xwindup {
+      fmt.Printf("...x windup...\n")
       continue
     } else {
       xwindup = false
     }
     for j:=s.corner[1]; j < s.corner[1]+3; j++ { 
       if j < y && ywindup {
+        fmt.Printf("...y windup...\n")
         continue
       } else {
         ywindup = false
       }
-      fmt.Printf("i,j,z=%v,%v,%v\n",i,j,z)
+      fmt.Printf("[jLoop]i,j,z=%v,%v,%v\n",i,j,z)
       if s.p[i][j][0] == 0 { 
+        fmt.Printf("Blank found at %v,%v\n",i,j)
         for k:=z; k < 10; k++ { 
-          fmt.Printf("i,j,k=%v,%v,%v\n",i,j,k)
+          fmt.Printf("[kLoop]i,j,k=%v,%v,%v\n",i,j,k)
           if s.p[i][j][k] != 0 { 
             psquare[i-s.corner[0]][j-s.corner[1]] = s.p[i][j][k] 
             // start next level at next cell
@@ -260,9 +264,11 @@ func (s square) permutate(x,y,z int,psquare [3][3]int) {
               // just wrap and go home (do nothing)
               fmt.Println("go home, at the end of the rope")
             }
-            
           }
         }
+        fmt.Printf("... Return from k loop\n")
+      } else {
+        fmt.Printf("... Not a blank here\n")
       }     
     }   
   } 
