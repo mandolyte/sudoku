@@ -71,7 +71,6 @@ func (s *square) pencilMarks() {
       // if coordinate in puzzle is not zeros continue
       // If zero then it needs pencil marks
       if s.p[i][j][0] == 0 {
-        //fmt.Printf("puzzle[%v][%v] needs pencil marks\n",i,j)
         var x int
         for x=1; x < 10; x++ {
           // loop thru all 9 candidates (1..9)
@@ -107,7 +106,7 @@ func (s *square) printPencilMarks() {
       // if coordinate in puzzle is not zeros continue
       // If zero then it needs pencil marks
       if s.p[i][j][0] == 0 {
-        fmt.Printf("Pencil marks for puzzle[%v][%v] are:",i,j)
+        log.Printf("Pencil marks for puzzle[%v][%v] are:",i,j)
         var x int
         for x=1; x < 10; x++ {
           if s.p[i][j][x] == 0 {
@@ -194,7 +193,7 @@ func (s *square) permutations() {
     }
     i2++
   }
-  fmt.Printf("psquare is:\n%v\n",psquare)
+  log.Printf("psquare is:\n%v\n",psquare)
   if count == 0 {
     // nothing to do... square is solved
     s.candidates = append(s.candidates, psquare)
@@ -211,41 +210,31 @@ func (s *square) permutations() {
       }
       fmt.Print("\n")
     }
+    fmt.Print("---\n")
   }
 }
 
 func (s *square) permutate(x,y,z int,psquare [3][3]int) {   
   s.level++
-  log.Printf("Level: %v, Permutate start at [%v][%v][%v]\n",s.level,x,y,z)
-  fmt.Printf("psquare is:\n%v\n",psquare)
-  fmt.Println("Validate it")
   if tverr := testValidate(psquare); tverr == nil {
-    fmt.Println("***Valid, append to candidates")
     s.candidates = append(s.candidates,psquare)
-    fmt.Printf("*** len(s.candidates) is %v\n",len(s.candidates))
   }
   var xwindup bool = true
   var ywindup bool = true
   for i:=s.corner[0]; i < s.corner[0]+3; i++ {
-    fmt.Printf("[iLoop]i,z=%v,%v\n",i,z)
     if i < x && xwindup {
-      fmt.Printf("...x windup...\n")
       continue
     } else {
       xwindup = false
     }
     for j:=s.corner[1]; j < s.corner[1]+3; j++ { 
       if j < y && ywindup {
-        fmt.Printf("...y windup...\n")
         continue
       } else {
         ywindup = false
       }
-      fmt.Printf("[jLoop]i,j,z=%v,%v,%v\n",i,j,z)
       if s.p[i][j][0] == 0 { 
-        fmt.Printf("Blank found at %v,%v\n",i,j)
         for k:=z; k < 10; k++ { 
-          fmt.Printf("[kLoop]i,j,k=%v,%v,%v\n",i,j,k)
           if s.p[i][j][k] != 0 { 
             psquare[i-s.corner[0]][j-s.corner[1]] = s.p[i][j][k] 
             // start next level at next cell
@@ -262,14 +251,10 @@ func (s *square) permutate(x,y,z int,psquare [3][3]int) {
             } else {
               // this means we are at the end of the square
               // just wrap and go home (do nothing)
-              fmt.Println("go home, at the end of the rope")
             }
           }
         }
-        fmt.Printf("... Return from k loop\n")
-      } else {
-        fmt.Printf("... Not a blank here\n")
-      }     
+      }    
     }   
   } 
   s.level-- 

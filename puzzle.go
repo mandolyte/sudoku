@@ -119,7 +119,7 @@ func (p *puzzle) Solve() (bool, error) {
 
   p.print()
   // generate all possible squares
-  for i:=6; i<7; i++ {
+  for i:=0; i<9; i++ {
     log.Printf("Permuting square %v\n",i)
     (p.ninesqs[i]).printPencilMarks()
     (p.ninesqs[i]).permutations()
