@@ -6,7 +6,7 @@ import "log"
 type square struct {
   corner [3]int
   p *[9][9][10]int
-  candidates []([3][3]int)
+  candidates map[string][3][3]int
   level int
 }
 
@@ -14,7 +14,7 @@ func NewSquare(corner_coords [3]int, p *[9][9][10]int) *square {
   s := new(square)
   s.corner = corner_coords
   s.p = p
-  s.candidates = make([]([3][3]int),0)
+  s.candidates = make(map[string][3][3]int)
   return s
 }
 
@@ -180,7 +180,7 @@ func (s *square) permutations() {
   log.Printf("psquare is:\n%v\n",psquare)
   if count == 0 {
     // nothing to do... square is solved
-    s.candidates = append(s.candidates, psquare)
+    s.candidates[squareFingerprint(psquare)] = psquare
   } else {
     // now use this copy and generate all permutations 
     // this function is recursive
@@ -201,7 +201,7 @@ func (s *square) permutations() {
 func (s *square) permutate(x,y,z int,psquare [3][3]int) {   
   s.level++
   if tverr := squareValidate(psquare); tverr == nil {
-    s.candidates = append(s.candidates,psquare)
+    s.candidates[squareFingerprint(psquare)] = psquare
   }
   var xwindup bool = true
   var ywindup bool = true
@@ -243,3 +243,4 @@ func (s *square) permutate(x,y,z int,psquare [3][3]int) {
   } 
   s.level-- 
 }
+

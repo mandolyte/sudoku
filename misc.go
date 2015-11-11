@@ -1,5 +1,6 @@
 package sudoku
 import "errors"
+import "fmt"
 // misc
 
 var squares [9][3]int
@@ -34,3 +35,9 @@ func squareValidate(psquare [3][3]int) error {
   return nil
 }
 
+func squareFingerprint(s [3][3]int) string {
+  return fmt.Sprintf("%v%v%v%v%v%v%v%v%v",
+    s[0][0],s[0][1],s[0][2],
+    s[1][0],s[1][1],s[1][2],
+    s[2][0],s[2][1],s[2][2])
+}
