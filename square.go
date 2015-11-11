@@ -162,22 +162,6 @@ func (s *square) validate() error {
   return nil
 }
 
-func testValidate(psquare [3][3]int) error {
-  var tester [10]int
-  var i,j int
-  for i=0; i < 3; i++ {
-    for j=0; j < 3; j++ {
-      tester[psquare[i][j]] = psquare[i][j]
-    }
-  }
-  for i=1; i<10; i++ {
-    if tester[i] == 0 {
-      return errors.New("Not solved")
-    }
-  }
-  return nil
-}
-
 func (s *square) permutations() {
   var psquare [3][3]int
   // make a copy of our 3x3; counting the blanks
@@ -216,7 +200,7 @@ func (s *square) permutations() {
 
 func (s *square) permutate(x,y,z int,psquare [3][3]int) {   
   s.level++
-  if tverr := testValidate(psquare); tverr == nil {
+  if tverr := squareValidate(psquare); tverr == nil {
     s.candidates = append(s.candidates,psquare)
   }
   var xwindup bool = true
