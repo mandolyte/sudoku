@@ -1,8 +1,10 @@
 package sudoku
 import "errors"
 import "fmt"
+import "os"
 // misc
 
+var debug bool = true
 var squares [9][3]int
 
 func init() {
@@ -40,4 +42,10 @@ func squareFingerprint(s [3][3]int) string {
     s[0][0],s[0][1],s[0][2],
     s[1][0],s[1][1],s[1][2],
     s[2][0],s[2][1],s[2][2])
+}
+
+func dbg (msg string) {
+  if debug {
+    fmt.Fprint(os.Stderr,msg)
+  }
 }
