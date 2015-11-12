@@ -1,7 +1,6 @@
 // sudoku solver
 package main
 
-import "fmt"
 import "log"
 import "github.com/mandolyte/sudoku"
 
@@ -13,9 +12,9 @@ func main() {
 		log.Fatalf("Error from NewPuzzle():\n%v" , err)
 	}
 	if solved {
-		fmt.Println("Puzzle Solved!")
+		log.Println("Puzzle Solved!")
 	} else {
-		fmt.Println("Puzzle not solved :-(")
+		log.Println("Puzzle not solved :-(")
 	}
 
 }
