@@ -273,3 +273,34 @@ func (s *square) permutate(x,y,z int,psquare [3][3]int) {
   }
   s.level--
 }
+
+/*
+to do:
+- transform square into array (or slide?)
+* transform pencil marks into slice (no empty spots) - pmarks
+* need to change pencil marks to include initial
+  given cell value as the sole pencil mark for that cell;
+  so the pencil mark slide is never empty (needed??)
+* then a bruteForceCancidates() method
+
+func bruteForceCancidates(loc int) bool {
+  for _, cell := range pmarks {
+    // copy pencil marks into array/slice
+    sqslice[loc] = cell
+    if err := sqvalidate(); err == nill {
+      // good to go; this is a candidate
+      // copy to map of candidates
+      ... do the copy
+    }
+    if loc == 8 {
+      // at end of Square
+      return false
+    }
+    // ok, not on last cell in Square
+    // keep going
+    bruteForceCancidates(loc + 1)
+
+  }
+  // validate & copy to candidate map
+}
+*/
