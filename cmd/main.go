@@ -7,10 +7,7 @@ import "github.com/mandolyte/sudoku"
 
 func main() {
 	p := sudoku.NewPuzzle()
-	solved, err := p.Solve()
-	if err != nil {
-		log.Fatalf("Error from NewPuzzle():\n%v" , err)
-	}
+	solved, _ := p.Solve()
 	if solved {
 		log.Println("Puzzle Solved!")
 	} else {

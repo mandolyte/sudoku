@@ -101,9 +101,7 @@ func (p *puzzle) Solve() (bool, error) {
   dbg("DEBUG: load the squares\n")
   for i:=0; i<9; i++ {
     p.ninesqs[i] = NewSquare(squares[i], &p.val)
-    //(nine[i]).Print()
     (p.ninesqs[i]).PencilMarks()
-    //(nine[i]).PrintPencilMarks()
   }
 
   // create the rows
@@ -133,11 +131,13 @@ func (p *puzzle) Solve() (bool, error) {
     }
   }
   // this will print puzzle after initial work
-  p.print()
+  //p.print()
   // generate all possible squares
   for i:=0; i<9; i++ {
     dbg(fmt.Sprintf("Permuting square %v\n",i))
-    (p.ninesqs[i]).PrintPencilMarks()
+    if debug {
+      (p.ninesqs[i]).PrintPencilMarks()
+    }
     (p.ninesqs[i]).Permutations()
   }
   // is it solved (must have easy puzzle!)

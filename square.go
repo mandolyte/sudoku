@@ -6,6 +6,8 @@ type square struct {
   corner [3]int
   p *[9][9][10]int
   candidates map[string][3][3]int
+  linearsq [9]int
+  linearpm [][]int
   level int
 }
 
@@ -17,6 +19,7 @@ func NewSquare(corner_coords [3]int, p *[9][9][10]int) *square {
   return s
 }
 
+/* this method is only for testing purposes */
 func SetSquare(a,b,c,d,e,f,g,h,i int) *square {
   var val [9][9][10]int
 
@@ -123,22 +126,21 @@ func (s *square) PencilMarks() {
 }
 
 func (s *square) PrintPencilMarks() {
+  dbg(fmt.Sprintf("Pencil Marks for square:\n%v",s.String()))
   var i,j int
   for i=s.corner[0]; i < s.corner[0]+3; i++ {
     for j=s.corner[1]; j < s.corner[1]+3; j++ {
       // if coordinate in puzzle is not zeros continue
       // If zero then it needs pencil marks
-      if s.p[i][j][0] == 0 {
-        dbg(fmt.Sprintf("Pencil marks for puzzle[%v][%v] are:",i,j))
-        var x int
-        for x=1; x < 10; x++ {
-          if s.p[i][j][x] == 0 {
-            continue
-          }
-          dbg(fmt.Sprintf("%v,",x))
+      dbg(fmt.Sprintf("Pencil marks for cell [%v %v]:",i,j))
+      var x int
+      for x=1; x < 10; x++ {
+        if s.p[i][j][x] == 0 {
+          continue
         }
-        dbg(fmt.Sprint("\n"))
+        dbg(fmt.Sprintf("%v,",x))
       }
+      dbg(fmt.Sprint("\n"))
     }
   }
 }
@@ -185,122 +187,110 @@ func (s *square) Validate() error {
   return nil
 }
 
-func (s *square) Permutations() {
-  var psquare [3][3]int
-  // make a copy of our 3x3; counting the blanks
-  var count, i2, j2 int
-  for i:=s.corner[0]; i < s.corner[0]+3; i++ {
-    j2 = 0
-    for j:=s.corner[1]; j < s.corner[1]+3; j++ {
-      psquare[i2][j2] = s.p[i][j][0]
-      if psquare[i2][j2] == 0 {
-        count++
-      }
-      j2++
+func (s *square) linearValidate() error {
+  //dbg(fmt.Sprintf("linearValidate() testing %v",s.linearsq))
+  var tester [10]int
+  for i:=0; i<9; i++ {
+    tester[s.linearsq[i]] = s.linearsq[i]
+  }
+  for i:=1; i<10; i++ {
+    if tester[i] == 0 {
+      return errors.New("Not solved")
     }
-    i2++
   }
-  dbg(fmt.Sprintf("psquare is:\n%v\n",psquare))
-  if count == 0 {
-    // nothing to do... square is solved
-    s.candidates[squareFingerprint(psquare)] = psquare
-  } else {
-    // now use this copy and generate all permutations
-    // this function is recursive
-    s.permutate(s.corner[0],s.corner[1],1,psquare)
+  return nil
+}
+
+func (s *square) Permutations() {
+  s.Convert2DTo1D()
+  s.BruteForcePermute()
+}
+
+func (s *square) Convert2DTo1D() {
+  s.linearsq[0] = s.p[0][0][0]
+  s.linearsq[1] = s.p[0][1][0]
+  s.linearsq[2] = s.p[0][2][0]
+  s.linearsq[3] = s.p[1][0][0]
+  s.linearsq[4] = s.p[1][1][0]
+  s.linearsq[5] = s.p[1][2][0]
+  s.linearsq[6] = s.p[2][0][0]
+  s.linearsq[7] = s.p[2][1][0]
+  s.linearsq[8] = s.p[2][2][0]
+
+  s.linearpm = make([][]int,0)
+
+  // fill up the slices with pencil marks
+
+  for i:=s.corner[0]; i<s.corner[0]+3; i++ {
+    for j:=s.corner[1]; j<s.corner[1]+3; j++ {
+      tmp := make([]int,0)
+      for k:=1; k<10; k++ {
+        if s.p[i][j][k] == 0 {
+          continue
+        }
+        tmp = append(tmp,k) // k is 1 to 9, the P/M itself
+      }
+      s.linearpm = append(s.linearpm,tmp)
+    }
   }
+
+  
+  // debug
+  for n,sq := range s.linearpm {
+    dbg(fmt.Sprintf("Convert2DTo1D() n=%v, pencilmarks=%v, len=%v\n",
+      n,sq,len(sq)))
+  }
+  
+
+}
+
+func (s *square) BruteForcePermute() {
+  s.bruteForceCandidates(0)
   dbg(fmt.Sprintf("Square has %v possibilities\n",len(s.candidates)))
   if debug {
     for _,ps := range s.candidates {
-      fmt.Printf("%v\n",ps)
-      /*
-      for i:=0; i < 3; i++ {
-        for j:=0; j < 3; j++ {
-          fmt.Print(ps[i][j])
-        }
-        fmt.Print("\n")
-      }
-      fmt.Print("---\n")
-      */
+      dbg(fmt.Sprintf("%v\n",ps))
     }
   }
 }
 
-func (s *square) permutate(x,y,z int,psquare [3][3]int) {
-  s.level++
-  if tverr := squareValidate(psquare); tverr == nil {
-    s.candidates[squareFingerprint(psquare)] = psquare
+func (s *square) bruteForceCandidates(loc int) {
+  if loc > 8 {
+    return
   }
-  dbg(fmt.Sprintf("permutate(x,y,z,psquare):%v,%v,%v,%v\n",
-    x,y,z,psquare))
-  var xwindup bool = true
-  var ywindup bool = true
-  for i:=s.corner[0]; i < s.corner[0]+3; i++ {
-    if i < x && xwindup {
-      continue
-    } else {
-      xwindup = false
-    }
-    for j:=s.corner[1]; j < s.corner[1]+3; j++ {
-      if j < y && ywindup {
-        continue
-      } else {
-        ywindup = false
+  if len(s.linearpm[loc]) > 0 {
+    
+    dbg(fmt.Sprintf("loc=%v, value=%v, pm_len=%v\n",
+      loc,s.linearsq[loc],len(s.linearpm[loc])))
+    
+    for _, cell := range s.linearpm[loc] {
+      dbg(fmt.Sprintf("Working on loc=%v,pm=%v\n",loc,cell))
+      // copy pencil marks into array/slice
+      s.linearsq[loc] = cell
+      if err := s.linearValidate(); err == nil {
+        // good to go; this is a candidate
+        // copy to map of candidates
+        // first, convert back to a square
+        var psquare[3][3]int
+        psquare[0][0] = s.linearsq[0]
+        psquare[0][1] = s.linearsq[1]
+        psquare[0][2] = s.linearsq[2]
+        psquare[1][0] = s.linearsq[3]
+        psquare[1][1] = s.linearsq[4]
+        psquare[1][2] = s.linearsq[5]
+        psquare[2][0] = s.linearsq[6]
+        psquare[2][1] = s.linearsq[7]
+        psquare[2][2] = s.linearsq[8]
+
+        s.candidates[squareFingerprint(psquare)] = psquare
       }
-      if s.p[i][j][0] == 0 {
-        for k:=z; k < 10; k++ {
-          if s.p[i][j][k] != 0 {
-            psquare[i-s.corner[0]][j-s.corner[1]] = s.p[i][j][k]
-            // start next level at next cell
-            // k is easy, just set to 1
-            // i and j are inter-related
-            if j < s.corner[1]+3 {
-              // ok, just increment j
-              s.permutate(i,j+1,1,psquare)
-            } else if i < s.corner[0]+3 {
-              // tricky bit
-              // set j to back to corner column number
-              // and increment i
-              s.permutate(i+1,s.corner[1],1,psquare)
-            } else {
-              // this means we are at the end of the square
-              // just wrap and go home (do nothing)
-            }
-          }
-        }
-      }
+      // ok, not on last cell in Square
+      // keep going
+      s.bruteForceCandidates(loc + 1)
     }
+    s.bruteForceCandidates(loc+1)
   }
-  s.level--
+  s.bruteForceCandidates(loc+1)
 }
 
-/*
-to do:
-- transform square into array (or slide?)
-* transform pencil marks into slice (no empty spots) - pmarks
-* need to change pencil marks to include initial
-  given cell value as the sole pencil mark for that cell;
-  so the pencil mark slide is never empty (needed??)
-* then a bruteForceCancidates() method
 
-func bruteForceCancidates(loc int) bool {
-  for _, cell := range pmarks {
-    // copy pencil marks into array/slice
-    sqslice[loc] = cell
-    if err := sqvalidate(); err == nill {
-      // good to go; this is a candidate
-      // copy to map of candidates
-      ... do the copy
-    }
-    if loc == 8 {
-      // at end of Square
-      return false
-    }
-    // ok, not on last cell in Square
-    // keep going
-    bruteForceCancidates(loc + 1)
-
-  }
-  // validate & copy to candidate map
-}
-*/
