@@ -7,7 +7,6 @@ import (
   "strconv"
   "strings"
   "os"
-  "log"
 )
 
 
@@ -25,10 +24,14 @@ type puzzle struct {
   // representation of each column
   ninecols [9]col
 
+  solutions map[string][9][9][10]int
+
 }
 
 func NewPuzzle() *puzzle {
-  return new(puzzle)
+  p := new(puzzle)
+  p.solutions = make(map[string][9][9][10]int)
+  return p
 }
 
 
@@ -61,8 +64,12 @@ func (p *puzzle) String() string {
   return sp
 }
 
+func (p *puzzle) GetSquare(i int) *square {
+  return p.ninesqs[i]
+}
 
-func (p *puzzle) load() error {
+
+func (p *puzzle) Load() error {
   /* read stdin for puzzle and load up */
   var i,j int
   scanner := bufio.NewScanner(os.Stdin)
@@ -88,20 +95,11 @@ func (p *puzzle) load() error {
   if err := scanner.Err(); err != nil {
     return err
   }
-  return nil
-}
-
-func (p *puzzle) Solve() (bool, error) {
-  // load the puzzle
-  err := p.load()
-  if err != nil {
-    return false, err
-  }
   // create the squares
   dbg("DEBUG: load the squares\n")
   for i:=0; i<9; i++ {
     p.ninesqs[i] = NewSquare(squares[i], &p.val)
-    (p.ninesqs[i]).PencilMarks()
+    //(p.ninesqs[i]).PencilMarks()
   }
 
   // create the rows
@@ -132,6 +130,10 @@ func (p *puzzle) Solve() (bool, error) {
   }
   // this will print puzzle after initial work
   //p.print()
+  return nil
+}
+
+func (p *puzzle) Solve() (bool, error) {
   // generate all possible squares
   for i:=0; i<9; i++ {
     dbg(fmt.Sprintf("Permuting square %v\n",i))
@@ -147,12 +149,15 @@ func (p *puzzle) Solve() (bool, error) {
   }
 
   // try to solve
-  solved_flag := p.bruteForceSolve(0)
+  p.bruteForceSolve(0)
 
-  dbg(fmt.Sprintf("solved_flag=%v",solved_flag))
-  p.print() // whether solved or not
-  if solved_flag {
+  num_sols := len(p.solutions)
+  dbg(fmt.Sprintf("Number of solutions is %v\n",num_sols))
+  if num_sols == 1 {
+    p.print()
     return true, nil
+  } else if num_sols > 1 {
+    return false, errors.New("Error! more than one solution")
   }
   return false, errors.New("Not Solved :-(")
 }
@@ -187,52 +192,48 @@ func (p *puzzle) validate() error {
   return nil
 }
 
-func (p *puzzle) bruteForceSolve(sq int) bool {
-  // logic flow
-  // do a function for each square, which:
-  // a. iterates over its map of possible solutions
-  // b. each possible solution is copied into into the
-  //    main puzzle
-  // c. puzzle is tested for solved
-  // d. if solved, return nil as solved signal
-  // e. else invoke the next square
-  // concept: all possible combinations of squares is tested
-  // and one of them should be the solution. As soon as the
-  // solution is found return nil
-  dbg(fmt.Sprintf("bruteForceSolve() on %v",sq))
+func (p *puzzle) bruteForceSolve(sq int) {
+  dbg(fmt.Sprintf("bruteForceSolve() on %v\n",sq))
+  if sq > 8 {
+    return 
+  }
+
   s := p.ninesqs[sq]
   num := len(s.candidates)
-  var count int = -1
-  for _, psquare := range s.candidates {
-    // copy psquare into puzzle
-    count++
-    log.Printf("Testing square %v: %v of %v",sq,count,num)
-    for i:=0; i < 3; i++ {
-      for j:=0; j < 3; j++ {
-        p.val[s.corner[0]+i][s.corner[1]+j][0] = psquare[i][j]
+  if num > 0 {
+    var count int = -1
+    for _, psquare := range s.candidates {
+      // copy psquare into puzzle
+      count++
+      dbg(fmt.Sprintf("Testing square %v: %v of %v\n",sq,count,num))
+      for i:=0; i < 3; i++ {
+        for j:=0; j < 3; j++ {
+          p.val[s.corner[0]+i][s.corner[1]+j][0] = psquare[i][j]
+        }
       }
-    }
-    // ok, now it is copied... test to see if puzzle is solved
-    if err := p.validate(); err == nil {
-      // Yeah! puzzle is solved
-      log.Println("Puzzle solved!")
-      return true
-    } else {
+      // ok, now it is copied... test to see if puzzle is solved
+      if err := p.validate(); err == nil {
+        // Yeah! puzzle is solved
+        //dbg("Puzzle solved (a)!\n")
+        p.solutions[p.String()] = p.val
+      } 
       // with this candidate copied, let's proceed to the
       // other squares in turn to see they have the missing
       // combination
       // first - are we on last square?
       if sq == 8 {
-        return false // bummer
+        return  // bummer
       }
       // ok, not on last square, keep going
       p.bruteForceSolve(sq+1)
     }
+  } else {
+    p.bruteForceSolve(sq+1)
   }
   if err := p.validate(); err == nil {
     // Yeah! puzzle is solved
-    log.Println("Puzzle solved!")
-    return true
+    //dbg("Puzzle solved (b)!\n")
+    p.solutions[p.String()] = p.val
   }
-  return false
+  return 
 }

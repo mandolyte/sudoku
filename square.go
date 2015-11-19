@@ -207,18 +207,19 @@ func (s *square) Permutations() {
 }
 
 func (s *square) Convert2DTo1D() {
-  s.linearsq[0] = s.p[0][0][0]
-  s.linearsq[1] = s.p[0][1][0]
-  s.linearsq[2] = s.p[0][2][0]
-  s.linearsq[3] = s.p[1][0][0]
-  s.linearsq[4] = s.p[1][1][0]
-  s.linearsq[5] = s.p[1][2][0]
-  s.linearsq[6] = s.p[2][0][0]
-  s.linearsq[7] = s.p[2][1][0]
-  s.linearsq[8] = s.p[2][2][0]
+  s.linearsq[0] = s.p[s.corner[0]][s.corner[1]][0]
+  s.linearsq[1] = s.p[s.corner[0]][s.corner[1]+1][0]
+  s.linearsq[2] = s.p[s.corner[0]][s.corner[1]+2][0]
+
+  s.linearsq[3] = s.p[s.corner[0]+1][s.corner[1]][0]
+  s.linearsq[4] = s.p[s.corner[0]+1][s.corner[1]+1][0]
+  s.linearsq[5] = s.p[s.corner[0]+1][s.corner[1]+2][0]
+
+  s.linearsq[6] = s.p[s.corner[0]+2][s.corner[1]][0]
+  s.linearsq[7] = s.p[s.corner[0]+2][s.corner[1]+1][0]
+  s.linearsq[8] = s.p[s.corner[0]+2][s.corner[1]+2][0]
 
   s.linearpm = make([][]int,0)
-
   // fill up the slices with pencil marks
 
   for i:=s.corner[0]; i<s.corner[0]+3; i++ {
@@ -234,37 +235,40 @@ func (s *square) Convert2DTo1D() {
     }
   }
 
-  
+  /*
   // debug
   for n,sq := range s.linearpm {
     dbg(fmt.Sprintf("Convert2DTo1D() n=%v, pencilmarks=%v, len=%v\n",
       n,sq,len(sq)))
   }
-  
+  */
 
 }
 
 func (s *square) BruteForcePermute() {
   s.bruteForceCandidates(0)
   dbg(fmt.Sprintf("Square has %v possibilities\n",len(s.candidates)))
+  /*
   if debug {
     for _,ps := range s.candidates {
       dbg(fmt.Sprintf("%v\n",ps))
     }
   }
+  */
 }
 
 func (s *square) bruteForceCandidates(loc int) {
+  //dbg(fmt.Sprintf("bruteForceCandidates() with loc=%v\n",loc))
   if loc > 8 {
     return
   }
   if len(s.linearpm[loc]) > 0 {
     
-    dbg(fmt.Sprintf("loc=%v, value=%v, pm_len=%v\n",
-      loc,s.linearsq[loc],len(s.linearpm[loc])))
+    //dbg(fmt.Sprintf("loc=%v, value=%v, pm_len=%v\n",
+      //loc,s.linearsq[loc],len(s.linearpm[loc])))
     
     for _, cell := range s.linearpm[loc] {
-      dbg(fmt.Sprintf("Working on loc=%v,pm=%v\n",loc,cell))
+      //dbg(fmt.Sprintf("Working on loc=%v,pm=%v\n",loc,cell))
       // copy pencil marks into array/slice
       s.linearsq[loc] = cell
       if err := s.linearValidate(); err == nil {
@@ -281,15 +285,18 @@ func (s *square) bruteForceCandidates(loc int) {
         psquare[2][0] = s.linearsq[6]
         psquare[2][1] = s.linearsq[7]
         psquare[2][2] = s.linearsq[8]
-
+        //dbg(fmt.Sprintf("linearValidate() valid:%v\n",psquare))
         s.candidates[squareFingerprint(psquare)] = psquare
+      } else { 
+        // ok, not on last cell in Square, keep going
+        //dbg(fmt.Sprintf("linearValidate() not valid:%v\n",s.linearsq))
+        s.bruteForceCandidates(loc + 1)
       }
-      // ok, not on last cell in Square
-      // keep going
-      s.bruteForceCandidates(loc + 1)
     }
+    //dbg(fmt.Sprintf("... done with all pencilmarks at %v\n",loc))
     s.bruteForceCandidates(loc+1)
   }
+  //dbg(fmt.Sprintf("... no pencil marks at %v, keep going\n",loc))
   s.bruteForceCandidates(loc+1)
 }
 
