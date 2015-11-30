@@ -3,6 +3,7 @@ package main
 
 import "log"
 import "github.com/mandolyte/sudoku"
+import "fmt"
 
 
 func main() {
@@ -10,11 +11,10 @@ func main() {
 	if err := p.Load(); err != nil {
 		log.Fatal("Error on Load()")
 	}
-	solved, _ := p.Solve()
-	if solved {
-		log.Println("Puzzle Solved!")
-	} else {
-		log.Println("Puzzle not solved :-(")
-	}
-
+	s := p.String()
+	fmt.Println(s)
+	p.SetPencilMarks()
+	//s = p.PencilMarks() 
+	//fmt.Println(s)
+	fmt.Printf("Validate() returns:%v\n",p.Validate())
 }
