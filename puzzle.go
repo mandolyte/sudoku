@@ -6,6 +6,7 @@ import (
   "strconv"
   "strings"
   "os"
+  "errors"
 )
 
 type puzzle struct {
@@ -66,9 +67,34 @@ func (p *puzzle) Load() error {
   return nil
 }
 
+func (p *puzzle) Analyze() int {
+  total := 1
+  for n,c := range p.cells {
+    t := len(c.marks)
+    if t != 0 {
+      dbg(fmt.Sprintf("cell %v has %v marks\n",n,t))
+      total *= t
+    }
+  }
+  return total
+}
+
+func (p *puzzle) SetSingleMarks() {
+  for n,_ := range p.cells {
+    t := len(p.cells[n].marks)
+    if t == 1 {
+      //dbg(fmt.Sprintf("t is one for cell %v\n",n))
+      p.cells[n].value = p.cells[n].marks[0]
+      i:=0
+      p.cells[n].marks = append(p.cells[n].marks[:i], 
+        p.cells[n].marks[i+1:]...)
+    }
+  }
+}
+
 func (p *puzzle) SetPencilMarks() {
   for n,_ := range p.cells {
-    dbg(fmt.Sprintf("\n ==> Check Pencil Marks for %v\n",n))
+    //dbg(fmt.Sprintf("\n ==> Check Pencil Marks for %v\n",n))
     if p.cells[n].value != 0 {
       continue
     }
@@ -89,10 +115,10 @@ func (p *puzzle) SetPencilMarks() {
 
 func (p *puzzle) is_in_row(n,i int) bool {
   var r int = n/9
-  dbg(fmt.Sprintf("is_in_row(%v,%v) is row %v\n",n,i,r))
+  //dbg(fmt.Sprintf("is_in_row(%v,%v) is row %v\n",n,i,r))
   for c:=0; c<9; c++ {
     if p.cells[r*9+c].value == uint8(i) {
-      dbg(fmt.Sprintf("True: %v is in row %v\n",i,r))
+      //dbg(fmt.Sprintf("True: %v is in row %v\n",i,r))
       return true
     }
   }
@@ -101,10 +127,10 @@ func (p *puzzle) is_in_row(n,i int) bool {
 
 func (p *puzzle) is_in_col(n,i int) bool {
   var c int = n%9
-  dbg(fmt.Sprintf("is_in_col(%v,%v) is col %v\n",n,i,c))
+  //dbg(fmt.Sprintf("is_in_col(%v,%v) is col %v\n",n,i,c))
   for r:=0; r<9; r++ {
     if p.cells[r*9+c].value == uint8(i) {
-      dbg(fmt.Sprintf("True: %v is in col %v\n",i,c))
+      //dbg(fmt.Sprintf("True: %v is in col %v\n",i,c))
       return true
     }
   }
@@ -131,12 +157,12 @@ func (p *puzzle) is_in_square(n,i int) bool {
     "ERR: no square found for %v,%v",n,i))
     panic("see error")
   }
-  dbg(fmt.Sprintf("is_in_square(%v,%v) is sq %v,%v\n",n,i,r,c))
+  //dbg(fmt.Sprintf("is_in_square(%v,%v) is sq %v,%v\n",n,i,r,c))
   for x := r; x < r+3; x++ {
     for y := c; y < c+3; y++ {
       //dbg(fmt.Sprintf("X,Y=%v,%v\n",x,y))
       if p.cells[x*9+y].value == uint8(i) {
-        dbg(fmt.Sprintf("True: %v is in sq %v,%v\n",i,r,c))
+        //dbg(fmt.Sprintf("True: %v is in sq %v,%v\n",i,r,c))
         return true
       }
     }
@@ -159,12 +185,11 @@ func (p *puzzle) PencilMarks() string {
   return sp
 }
 
-func (p *puzzle) Validate() bool {
+func (p *puzzle) Validate() error {
   // quick check any blanks/zeros
   for n,_ := range p.cells {
     if p.cells[n].value == 0 {
-      dbg(fmt.Sprintf("Validate() found zero at n=%v",n))
-      return false
+      return errors.New(fmt.Sprintf("Validate() found zero at n=%v",n))
     }
   }
 
@@ -177,12 +202,10 @@ func (p *puzzle) Validate() bool {
     for i := 1; i < 10; i++ {
       if val,ok := rowdups[uint8(i)]; ok {
         if val > 1 {
-          dbg(fmt.Sprintf("Validate() row %v, dup %v\n",r,i))
-          return false
+          return errors.New(fmt.Sprintf("Validate() row %v, dup %v\n",r,i))
         }
       } else {
-        dbg(fmt.Sprintf("Validate() row %v, missing val %v\n",r,i))
-        return false
+        return errors.New(fmt.Sprintf("Validate() row %v, missing val %v\n",r,i))
       }
     }
   }
@@ -196,57 +219,55 @@ func (p *puzzle) Validate() bool {
     for i := 1; i < 10; i++ {
       if val,ok := coldups[uint8(i)]; ok {
         if val > 1 {
-          dbg(fmt.Sprintf("Validate() col %v, dup %v\n",c,i))
-          return false
+          return errors.New(fmt.Sprintf("Validate() col %v, dup %v\n",c,i))
         }
       } else {
-        dbg(fmt.Sprintf("Validate() col %v, missing val %v\n",c,i))
-        return false
+        return errors.New(fmt.Sprintf("Validate() col %v, missing val %v\n",c,i))
       }
     }
   }
 
   // check squares for dups, missing
   // square 1 - case r < 3 && c < 3: r,c = 0,0
-  if valid := p.validate_square(0,0); !valid {
-    return false
+  if err := p.validate_square(0,0); err != nil {
+    return err
   }
   // square 2 - case r < 3 && c < 6: r,c = 0,3
-  if valid := p.validate_square(0,3); !valid {
-    return false
+  if err :=  p.validate_square(0,3); err != nil {
+    return err
   }
   // square 3 - case r < 3 && c < 9: r,c = 0,6
-  if valid := p.validate_square(0,6); !valid {
-    return false
+  if err :=  p.validate_square(0,6); err != nil {
+    return err
   }
   // square 4 - case r < 6 && c < 3: r,c = 3,0
-  if valid := p.validate_square(3,0); !valid {
-    return false
+  if err :=  p.validate_square(3,0); err != nil {
+    return err
   }
   // square 5 - case r < 6 && c < 6: r,c = 3,3
-  if valid := p.validate_square(3,3); !valid {
-    return false
+  if err :=  p.validate_square(3,3); err != nil {
+    return err
   }
   // square 6 - case r < 6 && c < 9: r,c = 3,6
-  if valid := p.validate_square(3,6); !valid {
-    return false
+  if err :=  p.validate_square(3,6); err != nil {
+    return err
   }
   // square 7 - case r < 9 && c < 3: r,c = 6,0
-  if valid := p.validate_square(6,0); !valid {
-    return false
+  if err :=  p.validate_square(6,0); err != nil {
+    return err
   }
   // square 8 - case r < 9 && c < 6: r,c = 6,3
-  if valid := p.validate_square(6,3); !valid {
-    return false
+  if err :=  p.validate_square(6,3); err != nil {
+    return err
   }
   // square 9 case r < 9 && c < 9: r,c = 6,6
-  if valid := p.validate_square(6,6); !valid {
-    return false
+  if err :=  p.validate_square(6,6); err != nil {
+    return err
   }
-  return true
+  return nil
 }
 
-func (p *puzzle) validate_square(x,y int) bool {
+func (p *puzzle) validate_square(x,y int) error {
   //dbg(fmt.Sprintf("validate_square(%v,%v)\n",x,y))
   sqdups := make(map[uint8]int)
   for r := x; r < x+3; r++ {
@@ -257,13 +278,11 @@ func (p *puzzle) validate_square(x,y int) bool {
   for i := 1; i < 10; i++ {
     if val,ok := sqdups[uint8(i)]; ok {
       if val > 1 {
-        dbg(fmt.Sprintf("Validate() square %v,%v, dup %v\n",x,y,i))
-        return false
+        return errors.New(fmt.Sprintf("Validate() square %v,%v, dup %v\n",x,y,i))
       }
     } else {
-      dbg(fmt.Sprintf("Validate() square %v,%v, missing val %v\n",x,y,i))
-      return false
+      return errors.New(fmt.Sprintf("Validate() square %v,%v, missing val %v\n",x,y,i))
     }
   }
-  return true
+  return nil
 }

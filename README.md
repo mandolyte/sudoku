@@ -18,6 +18,7 @@ This design will complicate the square, row, and column validator logic, but I t
 To save space, I am switching to uint8. Space is more important because of the go routines I hope to introduce. The puzzle must become immutable to make the parallelization work.
 
 So this iteration will introduce the cell type and it will be used by the other types to build on.
+
 # Design musings #1
 ## Essential data structure
 *the puzzle content* Thinking of a 3D array of integers. The 2D slice would represent the input puzzle; with zeros for the blanks. The 3D slice would represent the pencil marks. Assuming a max number of pencil marks of 8, then the array would be 9 rows, by 9 columns, by 9 high: 9x9x9 = 729 slots. If the max number of pencil marks is 9, then 810 (9x9x10).
