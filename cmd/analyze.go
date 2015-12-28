@@ -14,7 +14,10 @@ func main() {
 	s := p.String()
 	fmt.Println(s)
 	p.SetPencilMarks()
-	//s = p.PencilMarks() 
-	//fmt.Println(s)
-	fmt.Printf("Validate() returns:%v\n",p.Validate())
+	p.SetSingleMarks()
+	if err := p.Validate(); err != nil {
+		fmt.Printf("%v\n",err)
+	} else {
+		fmt.Printf("Puzzle is solved.\n")
+	}
 }
