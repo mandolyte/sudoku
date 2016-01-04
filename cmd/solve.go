@@ -4,6 +4,7 @@ package main
 import "log"
 import "github.com/mandolyte/sudoku"
 import "fmt"
+//import "time"
 
 
 func main() {
@@ -11,14 +12,17 @@ func main() {
 	if err := p.Load(); err != nil {
 		log.Fatal("Error on Load()")
 	}
-	s := p.String()
-	fmt.Println(s)
 	p.SetPencilMarks()
 	p.SetSingleMarks()
-	if err := p.Validate(); err != nil {
-		fmt.Printf("%v\n",err)
-	} else {
-		fmt.Printf("Puzzle is solved.\n")
-	}
+	//s := p.String()
+	//fmt.Println(s)
 
+	sudoku.Solve(p)
+	//time.Sleep(30 * time.Second)
+	solutions := sudoku.GetSolutions()
+	//number_solutions := len(solutions)
+	//fmt.Printf("Number of solutions is:%v\n",number_solutions)
+	for _,s := range solutions {
+		fmt.Printf("%v",s)
+	}
 }

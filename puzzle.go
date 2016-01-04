@@ -39,6 +39,15 @@ func (p *puzzle) String() string {
   return sp
 }
 
+func (p *puzzle) fingerprint() string {
+  var sp string
+  for _,c := range p.cells {
+    sp += fmt.Sprintf("%v",c.value)
+  }
+  return sp
+}
+
+
 func (p *puzzle) Load() error {
   /* read stdin for puzzle and load up */
   var i int
@@ -80,14 +89,23 @@ func (p *puzzle) Analyze() int {
 }
 
 func (p *puzzle) SetSingleMarks() {
-  for n,_ := range p.cells {
-    t := len(p.cells[n].marks)
-    if t == 1 {
-      //dbg(fmt.Sprintf("t is one for cell %v\n",n))
-      p.cells[n].value = p.cells[n].marks[0]
-      i:=0
-      p.cells[n].marks = append(p.cells[n].marks[:i], 
-        p.cells[n].marks[i+1:]...)
+  var number_singles int
+  for {
+    number_singles = 0
+    for n,_ := range p.cells {
+      t := len(p.cells[n].marks)
+      if t == 1 {
+        //dbg(fmt.Sprintf("t is one for cell %v\n",n))
+        p.cells[n].value = p.cells[n].marks[0]
+        i:=0
+        p.cells[n].marks = append(p.cells[n].marks[:i], 
+          p.cells[n].marks[i+1:]...)
+        p.Remove_used_mark(p.cells[n].value, n)
+        number_singles++
+      }
+    }
+    if number_singles == 0 {
+      break
     }
   }
 }
@@ -111,6 +129,75 @@ func (p *puzzle) SetPencilMarks() {
       p.cells[n].marks = append(p.cells[n].marks,uint8(i))
     }
   }
+}
+
+func (p *puzzle) Remove_used_mark(mark uint8, location int) {
+  p.remove_mark_from_row(mark, location)
+  p.remove_mark_from_col(mark, location)
+  p.remove_mark_from_square(mark, location)
+}
+
+func (p *puzzle) remove_mark_from_row(m uint8,l int) {
+  var r int = l/9
+  start := r * 9
+  for i := start; i < start+9; i++ {
+    for n,v := range p.cells[i].marks {
+      if v == uint8(m) {
+        p.cells[i].marks = append(p.cells[i].marks[:n],
+          p.cells[i].marks[n+1:]...)
+        break
+      }
+    }
+  }
+}
+
+func (p *puzzle) remove_mark_from_col(m uint8,l int) {
+  var c int = l%9
+  for i := c; i < 81; i+=9 {
+    for n,v := range p.cells[i].marks {
+      if v == uint8(m) {
+        p.cells[i].marks = append(p.cells[i].marks[:n],
+          p.cells[i].marks[n+1:]...)
+        break
+      }
+    }
+  }
+}
+
+func (p *puzzle) remove_mark_from_square(m uint8,l int)  {
+  var r int = l/9
+  var c int = l%9
+  switch {
+  case r < 3 && c < 3: r,c = 0,0
+  case r < 3 && c < 6: r,c = 0,3
+  case r < 3 && c < 9: r,c = 0,6
+
+  case r < 6 && c < 3: r,c = 3,0
+  case r < 6 && c < 6: r,c = 3,3
+  case r < 6 && c < 9: r,c = 3,6
+
+  case r < 9 && c < 3: r,c = 6,0
+  case r < 9 && c < 6: r,c = 6,3
+  case r < 9 && c < 9: r,c = 6,6
+
+  default: dbg(fmt.Sprintf(
+    "ERR: no square found for location %v",l))
+    panic("see error")
+  }
+  //dbg(fmt.Sprintf("is_in_square(%v,%v) is sq %v,%v\n",n,i,r,c))
+  for x := r; x < r+3; x++ {
+    for y := c; y < c+3; y++ {
+      for n,v := range p.cells[x*9+y].marks {
+        if v == uint8(m) {
+          p.cells[x*9+y].marks = append(p.cells[x*9+y].marks[:n],
+            p.cells[x*9+y].marks[n+1:]...)
+          break
+        }
+      }
+    }
+  }  
+
+  return 
 }
 
 func (p *puzzle) is_in_row(n,i int) bool {
@@ -160,7 +247,7 @@ func (p *puzzle) is_in_square(n,i int) bool {
   //dbg(fmt.Sprintf("is_in_square(%v,%v) is sq %v,%v\n",n,i,r,c))
   for x := r; x < r+3; x++ {
     for y := c; y < c+3; y++ {
-      //dbg(fmt.Sprintf("X,Y=%v,%v\n",x,y))
+      //dbg(fmt.Sprintf("X,Y=%v,%v value is %v\n",x,y,p.cells[x*9+y].value))
       if p.cells[x*9+y].value == uint8(i) {
         //dbg(fmt.Sprintf("True: %v is in sq %v,%v\n",i,r,c))
         return true
