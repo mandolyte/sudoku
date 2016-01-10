@@ -76,6 +76,39 @@ func (p *puzzle) Load() error {
   return nil
 }
 
+func (p *puzzle) Fload(b []byte) error {
+  /* read stdin for puzzle and load up */
+  i := -1
+  for _,v := range b {
+    tmp := -1
+    //fmt.Printf("working on byte:%v\n",string(v))
+    if v == '-' || v == '_' {
+      tmp = 0
+    } else {
+      if n,nerr := strconv.Atoi(string(v)); nerr == nil {
+        tmp = n
+      }
+    }
+    //fmt.Printf("tmp is:%v\n",tmp)
+
+    // is the current byte a positive integer or 0?
+    if tmp == -1 {
+      // no - just keep processing the bytes
+      continue
+    }
+    // yes, put in the puzzle
+    i++
+    if i > 80 {
+      return errors.New("Found too many numbers")
+    }
+    p.cells[i].value = uint8(tmp)
+  }
+  if i < 80 {
+    return errors.New("Not enough numbers")
+  }
+  return nil
+}
+
 func (p *puzzle) Analyze() int {
   total := 1
   for n,c := range p.cells {
