@@ -2,11 +2,13 @@ package sudoku
 import "os"
 import "sync"
 import "github.com/mandolyte/simplelogger"
+import "sync/atomic"
 // misc
 
 var mutex = &sync.Mutex{}
 var solutions map[string]string
 var sl *simplelogger.SimpleLogger
+var Counter uint64
 
 func init() {
     solutions = make(map[string]string)
@@ -16,6 +18,10 @@ func init() {
         Writer: os.Stderr,
     }
     //sl.Info("init() @ time.now")
+}
+
+func inc_counter() {
+	atomic.AddUint64(&Counter, 1)
 }
 
 func add_solution(sol, puz string) {
@@ -73,6 +79,7 @@ func Solve(p *puzzle) {
 		wg.Add(1)
 		go func (q *puzzle) {
 			defer wg.Done()
+			inc_counter()
 			Solve(q)
 		}(q)
 	}

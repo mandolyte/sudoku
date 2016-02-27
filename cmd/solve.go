@@ -13,6 +13,8 @@ var input *string = flag.String("i", "",
 	"Input file with puzzle; default is STDIN")
 var otput *string = flag.String("o", "", 
 	"Output file for solution; default is STDOUT")
+var rate  *bool   = flag.Bool("r", false, 
+	"Shows rating (number of go routines needed to solve)")
 var help  *bool   = flag.Bool("h", false, "Shows help/usage")
 
 func main() {
@@ -46,6 +48,16 @@ func main() {
 			log.Fatalf("Error processing puzzle:%v",err)
 		}
 	}
+	var w *os.File
+	w = os.Stdout
+	if *otput != "" {
+		var err error
+		if w,err = os.Create(*otput); err != nil {
+			log.Fatalf("Error opening output %v was:%v\n",
+				*otput,err)
+		}
+	}
+
 
 	// now that we have the puzzle constructed,
 	// set the pencil marks and set any cells to those with
@@ -59,6 +71,9 @@ func main() {
 	//number_solutions := len(solutions)
 	//fmt.Printf("Number of solutions is:%v\n",number_solutions)
 	for _,s := range solutions {
-		fmt.Printf("%v",s)
+		fmt.Fprintf(w, "%v",s)
+	}
+	if *rate {
+		fmt.Fprintf(os.Stderr, "Rating:%v\n",sudoku.Counter)
 	}
 }
