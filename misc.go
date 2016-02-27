@@ -54,6 +54,7 @@ func Copy (p *puzzle) *puzzle {
 }
 
 func Solve(p *puzzle) {
+	inc_counter()
 	if err := p.Validate(); err == nil {
 		add_solution(p.fingerprint(), p.String())
 		return
@@ -79,7 +80,6 @@ func Solve(p *puzzle) {
 		wg.Add(1)
 		go func (q *puzzle) {
 			defer wg.Done()
-			inc_counter()
 			Solve(q)
 		}(q)
 	}
